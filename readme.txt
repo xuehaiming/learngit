@@ -1,4 +1,4 @@
-﻿测试1234,
+测试1234,
 测试.
 测试1234,
 Git is a distributed version control system.
