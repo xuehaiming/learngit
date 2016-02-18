@@ -1,0 +1,94 @@
+初始化一个Git仓库，使用git init命令。
+
+添加文件到Git仓库，分两步：
+
+第一步，使用命令git add <file1> <file2>，注意，可反复多次使用，添加多个文件；
+
+第二步，使用命令git commit -m "message"，完成。
+
+git status命令可以让我们时刻掌握仓库当前的状态
+
+git diff顾名思义就是查看difference   git diff <file>
+
+git log命令显示从最近到最远的提交日志
+
+用HEAD表示当前版本，上一个版本就是HEAD^，上上一个版本就是HEAD^^，当然往上100个版本写100个^比较容易数不过来，所以写成HEAD~100。
+我们要把当前版本回退到上一个版本，就可以使用git reset命令：
+git reset --hard HEAD^
+
+用git log再看看现在版本库的状态：
+最新的那个版本append GPL已经看不到了！
+办法其实还是有的，只要上面的git log命令行窗口还没有被关掉，你就可以顺着往上找啊找啊，找到最新的commit id是3628164...，于是就可以指定回到未来的某个版本：
+$ git reset --hard 3628164
+
+你回退到了某个版本，关掉了电脑，第二天早上就后悔了，想恢复到新版本怎么办
+当你用$ git reset --hard HEAD^回退到上一版本时，再想恢复到恢复前的最新版本，就必须找到最新版本的commit id。
+Git提供了一个命令git reflog用来记录你的每一次命令
+git reflog 获取到最新版本id即可恢复到最新版本
+
+
+前面讲了我们把文件往Git版本库里添加的时候，是分两步执行的：
+
+第一步是用git add把文件添加进去，实际上就是把文件修改添加到暂存区；
+第二步是用git commit提交更改，实际上就是把暂存区的所有内容提交到当前分支。
+每次修改，如果不add到暂存区，那就不会加入到commit中
+
+
+
+
+命令git checkout -- readme.txt意思就是，把readme.txt文件在工作区的修改全部撤销，这里有两种情况：
+一种是readme.txt自修改后还没有被放到暂存区，现在，撤销修改就回到和版本库一模一样的状态；
+一种是readme.txt已经添加到暂存区后，又作了修改，现在，撤销修改就回到添加到暂存区后的状态。
+1.
+总之，就是让这个文件回到最近一次git commit或git add时的状态。
+git checkout -- <file> 命令中的--很重要，没有--，就变成了“切换到另一个分支”的命令，我们在后面的分支管理中会再次遇到git checkout命令
+2.
+如果git add到暂存区了：还没有commit
+先用命令git reset HEAD <file> 可以把暂存区的修改撤销掉（unstage），重新放回工作区：
+再用git checkout -- <file> 即可将工作区文件恢复到版本库最新状态
+3.不但改错了东西，还从暂存区提交到了版本库，版本回退可以回退到上一个版本
+
+场景1：当你改乱了工作区某个文件的内容，想直接丢弃工作区的修改时，用命令git checkout -- file。
+
+场景2：当你不但改乱了工作区某个文件的内容，还添加到了暂存区时，想丢弃修改，分两步，第一步用命令git reset HEAD file，就回到了场景1，第二步按场景1操作。
+
+场景3：已经提交了不合适的修改到版本库时，想要撤销本次提交，参考版本回退一节，不过前提是没有推送到远程库。
+
+
+确实要从版本库中删除该文件，那就用命令rm <file>   然后  git rm <file>删掉，并且git commit：
+git rm 操作后，文件修改提交到暂存区，无法使用git checkout ，此时只有版本库中存有file.需要先git reset HEAD <file> 再使用git checkout <file> 命令将版本库中件恢复到工作区
+如果git rm后执行了commit ，需要
+1）先使用git reset --hard HEAD^从master回收处恢复到master中；
+2）再使用git reset HeAD -- file从master中把已删除信息copy到到stage区；
+3）最后，使用git checkout -- file从stage区把已删除信息copy到工作区。
+4）这时你就看到删除的文件又回来啦。啦啦啦！
+
+
+
+
+由于你的本地Git仓库和GitHub仓库之间的传输是通过SSH加密的，所以，需要一点设置：
+
+第1步：创建SSH Key。在用户主目录下，看看有没有.ssh目录，如果有，再看看这个目录下有没有id_rsa和id_rsa.pub这两个文件，如果已经有了，可直接跳到下一步。如果没有，打开Shell（Windows下打开Git Bash），创建SSH Key：
+$ ssh-keygen -t rsa -C "youremail@example.com"
+
+
+登陆GitHub，然后，在右上角找到“Create a new repo”按钮，创建一个新的仓库：
+在Repository name填入learngit，其他保持默认设置，点击“Create repository”按钮，就成功地创建了一个新的Git仓库：
+在本地的learngit仓库下运行命令：
+git remote add origin https://github.com/xuehaiming/learngit.git
+下一步，就可以把本地库的所有内容推送到远程库上：
+git push -u origin master
+由于远程库是空的，我们第一次推送master分支时，加上了-u参数，Git不但会把本地的master分支内容推送的远程新的master分支，还会把本地的master分支和远程的master分支关联起来，在以后的推送或者拉取时就可以简化命令。
+
+推送成功后，可以立刻在GitHub页面中看到远程库的内容已经和本地一模一样：
+
+从现在起，只要本地作了提交，就可以通过命令：
+git push origin master
+把本地master分支的最新修改推送至GitHub
+要关联一个远程库，使用命令git remote add origin git@server-name:path/repo-name.git；
+关联后，使用命令git push -u origin master第一次推送master分支的所有内容；
+此后，每次本地提交后，只要有必要，就可以使用命令git push origin master推送最新修改；
+分布式版本系统的最大好处之一是在本地工作完全不需要考虑远程库的存在，也就是有没有联网都可以正常工作，而SVN在没有联网的时候是拒绝干活的！当有网络的时候，再把本地提交推送一下就完成了同步，真是太方便了！
+
+去除本地仓库与远程仓库的关联
+git remote rm origin
